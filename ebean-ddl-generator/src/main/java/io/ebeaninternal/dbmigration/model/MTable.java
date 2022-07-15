@@ -636,6 +636,14 @@ public class MTable {
    * Add a 'drop column' to the diff.
    */
   private void diffDropColumn(ModelDiff modelDiff, MColumn existingColumn) {
+    String foreignKeyName = existingColumn.getForeignKeyName();
+    if (foreignKeyName != null) {
+      var dropForeignKey = new AlterForeignKey();
+      dropForeignKey.setName(foreignKeyName);
+      dropForeignKey.setTableName(name);
+      dropForeignKey.setColumnNames(DdlHelp.DROP_FOREIGN_KEY);
+      modelDiff.addDropForeignKey(dropForeignKey);
+    }
     DropColumn dropColumn = new DropColumn();
     dropColumn.setTableName(name);
     dropColumn.setColumnName(existingColumn.getName());

@@ -1,11 +1,7 @@
 package io.ebeaninternal.dbmigration.model;
 
-import io.ebeaninternal.dbmigration.migration.AddColumn;
-import io.ebeaninternal.dbmigration.migration.AddHistoryTable;
-import io.ebeaninternal.dbmigration.migration.AlterColumn;
-import io.ebeaninternal.dbmigration.migration.DropColumn;
-import io.ebeaninternal.dbmigration.migration.DropHistoryTable;
-import io.ebeaninternal.dbmigration.migration.DropTable;
+import io.ebeaninternal.dbmigration.ddlgeneration.platform.DdlHelp;
+import io.ebeaninternal.dbmigration.migration.*;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -199,6 +195,31 @@ class MTableTest {
     base.apply(alterColumn);
 
     assertThat(base.getColumn("id").getType()).isEqualTo("uuid");
+  }
+
+  @Test
+  void test_compare_dropColumnWithForeignKey() {
+    MTable base = base();
+    MColumn fkColumn = new MColumn("customer_id", "bigint");
+    fkColumn.setReferences("customer");
+    fkColumn.setForeignKeyName("fk_tab_customer");
+    fkColumn.setForeignKeyIndex("ix_tab_customer");
+    base.addColumn(fkColumn);
+
+    MTable baseWithoutFKeyColumn = base();
+
+    ModelDiff diff = new ModelDiff();
+    base.compare(diff, baseWithoutFKeyColumn);
+
+    assertThat(diff.getDropChanges()).hasSize(2);
+    AlterForeignKey dropFKey = (AlterForeignKey)diff.getDropChanges().get(0);
+    assertThat(dropFKey.getTableName()).isEqualTo("tab");
+    assertThat(dropFKey.getName()).isEqualTo("fk_tab_customer");
+    assertThat(dropFKey.getColumnNames()).isEqualTo(DdlHelp.DROP_FOREIGN_KEY);
+
+    DropColumn dropCol = (DropColumn)diff.getDropChanges().get(1);
+    assertThat(dropCol.getTableName()).isEqualTo("tab");
+    assertThat(dropCol.getColumnName()).isEqualTo("customer_id");
   }
 
   @Test

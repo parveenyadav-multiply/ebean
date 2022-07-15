@@ -206,6 +206,13 @@ public class ModelDiff {
   }
 
   /**
+   * Add Drop Foreign Key to the 'drop' changes.
+   */
+  public void addDropForeignKey(AlterForeignKey dropForeignKey) {
+    dropChanges.add(dropForeignKey);
+  }
+
+  /**
    * Add the AddHistoryTable to apply changes.
    */
   public void addAddHistoryTable(AddHistoryTable addHistoryTable) {
